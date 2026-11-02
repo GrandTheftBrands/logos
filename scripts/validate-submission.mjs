@@ -1,6 +1,6 @@
 // On submission issues opened or edited: check the files, post a preview, set labels.
 import { readFileSync } from 'node:fs';
-import { github, renderPreview, setLabels, taxonomy, upsertComment } from './lib.mjs';
+import { github, renderComparison, renderPreview, setLabels, taxonomy, upsertComment } from './lib.mjs';
 import { validateIssue } from './submission.mjs';
 
 const token = process.env.GITHUB_TOKEN;
@@ -26,7 +26,9 @@ if (result.errors.length) {
 }
 
 // Store the preview on the "previews" branch so the comment can show it
-const png = await renderPreview(result.logo.buf);
+const png = result.isUpdate && result.currentBuf
+  ? await renderComparison(result.currentBuf, result.logo.buf)
+  : await renderPreview(result.logo.buf);
 const path = `previews/${issue.number}.png`;
 if (!(await api('/repos/{repo}/branches/previews'))) {
   const main = await api('/repos/{repo}/git/ref/heads/main');
@@ -56,9 +58,12 @@ const image = `https://github.com/${repo}/blob/previews/${path}?raw=true&v=${put
 
 const { logo } = result;
 await upsertComment(api, issue.number, [
-  '### Ready for Review',
+  result.isUpdate ? '### Update Ready for Review' : '### Ready for Review',
   '',
-  `![Preview of ${result.brandName} ${result.variantLabel} on dark and light backgrounds](${image})`,
+  result.isUpdate
+    ? `![Current ${result.brandName} ${result.variantLabel} on the left, the new version on the right](${image})`
+    : `![Preview of ${result.brandName} ${result.variantLabel} on dark and light backgrounds](${image})`,
+  ...(result.isUpdate ? ['', '_Left: current version. Right: new version._'] : []),
   '',
   '| | |',
   '|---|---|',
@@ -67,7 +72,9 @@ await upsertComment(api, issue.number, [
   `| Category | ${label(taxonomy.categories, result.category)} |`,
   `| Logo Type | ${result.variantLabel} |`,
   `| Canon or Fanon | ${label(taxonomy.lore, result.lore)} |`,
-  `| File | ${logo.type.toUpperCase()}, ${logo.width} × ${logo.height}${logo.type === 'svg' ? ' (vector)' : ''} |`,
+  ...(result.isUpdate ? [`| Current File | ${result.currentType.toUpperCase()} |`] : []),
+  `| ${result.isUpdate ? 'New File' : 'File'} | ${logo.type.toUpperCase()}, ${logo.width} × ${logo.height}${logo.type === 'svg' ? ' (vector)' : ''} |`,
+  ...(result.isUpdate ? [`| What's Changing | ${result.changes.replace(/\n+/g, ' ').replace(/\|/g, '\\|')} |`] : []),
   ...(result.extras.length ? [`| Extras | ${result.extras.map((e) => e.name).join(', ')} |`] : []),
   `| Credited To | @${issue.user.login} |`,
   `| Page | \`/brands/${result.brand}/${result.variant}\` |`,

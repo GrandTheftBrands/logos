@@ -1,0 +1,49 @@
+name: Update a Logo
+description: Replace your own published logo, for example to add an SVG or upload an improved version.
+title: "[Update] "
+labels: ["submission", "update"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this to update a logo you're credited for. The new file gets the same automatic check as a new submission, and the bot shows the current and new versions side by side.
+
+        Want to add your own take on someone else's logo instead? Use **Submit a Logo**, and it's added as an alternate version with your credit.
+  - type: input
+    id: logo-page
+    attributes:
+      label: Logo Page
+      description: The link to the logo on Grand Theft Brands. Copy it from your browser.
+      placeholder: https://grandtheftbrands.pages.dev/brands/vice-city-manatees/primary
+    validations:
+      required: true
+  - type: textarea
+    id: logo
+    attributes:
+      label: New Logo File
+      description: Drag your SVG, PNG or .zip into this box. Same requirements as a new submission.
+    validations:
+      required: true
+  - type: textarea
+    id: extras
+    attributes:
+      label: Extra Files (Optional)
+      description: New animated GIF, MP4 or EPS versions. If you leave this empty, any existing extras are kept.
+  - type: textarea
+    id: changes
+    attributes:
+      label: What's Changing?
+      description: For example "Added the SVG" or "Fixed the colours and the anchor shape".
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirm
+      options:
+        - label: I recreated this logo myself.
+          required: true
+        - label: I did not use AI to create any part of it.
+          required: true
+        - label: I agree that it can be shared for free on Grand Theft Brands under the site's terms.
+          required: true

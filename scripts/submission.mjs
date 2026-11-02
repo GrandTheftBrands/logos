@@ -1,8 +1,8 @@
 // Validates a submission issue end to end. Used when it's opened/edited and again on approval.
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import YAML from 'yaml';
-import { ROOT, checkExtra, checkLogo, download, parseIssueForm, readSubmission, taxonomy } from './lib.mjs';
+import { ROOT, checkExtra, checkLogo, download, parseIssueForm, readSubmission, readUpdate, taxonomy } from './lib.mjs';
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
@@ -25,13 +25,45 @@ async function signedAttachmentUrls(issueNumber, token) {
   return map;
 }
 
+/** For updates: the artist's existing version, which supplies the brand details. */
+function readCurrent({ brand, variant, pageArtist }, artist, errors) {
+  const variantDir = join(ROOT, 'brands', brand, variant);
+  const brandFile = join(ROOT, 'brands', brand, 'brand.yml');
+  if (!existsSync(brandFile) || !existsSync(variantDir)) {
+    errors.push(`Couldn't find a logo at \`/brands/${brand}/${variant}\`. Check the **Logo Page** link.`);
+    return null;
+  }
+  const dir = join(variantDir, artist);
+  if ((pageArtist && pageArtist !== artist) || !existsSync(dir)) {
+    const credited = pageArtist ?? readdirSync(variantDir).join(', @');
+    errors.push(`This logo is credited to @${credited}, so only they can update it. To add your own version, use **Submit a Logo** instead.`);
+    return null;
+  }
+  const info = YAML.parse(readFileSync(brandFile, 'utf8'));
+  const meta = YAML.parse(readFileSync(join(dir, 'meta.yml'), 'utf8')) ?? {};
+  const file = ['logo.svg', 'logo.png'].map((f) => join(dir, f)).find(existsSync);
+  return {
+    brandName: info.name,
+    game: info.game,
+    category: info.category,
+    lore: meta.lore,
+    variantLabel: meta.label ?? taxonomy.variants.find((v) => v.id === variant)?.label ?? variant,
+    meta,
+    currentType: file?.endsWith('.svg') ? 'svg' : 'png',
+    currentBuf: file ? readFileSync(file) : null,
+  };
+}
+
 export async function validateIssue(issue, token) {
-  const sub = readSubmission(parseIssueForm(issue.body));
+  const isUpdate = issue.labels.some((l) => l.name === 'update');
+  const fields = parseIssueForm(issue.body);
+  const sub = isUpdate ? readUpdate(fields) : readSubmission(fields);
   const signed = await signedAttachmentUrls(issue.number, token);
   const fetchable = (url) => signed.get(url.match(UUID)?.[0]?.toLowerCase()) ?? url;
   const errors = [...sub.errors];
   const notes = [];
   const artist = issue.user.login.toLowerCase();
+  const current = isUpdate && sub.brand && sub.variant ? readCurrent(sub, artist, errors) : null;
 
   let logo = null;
   if (sub.logoUrl) {
@@ -56,8 +88,8 @@ export async function validateIssue(issue, token) {
     }
   }
 
-  // Existing brand / version on the site
-  if (sub.brand) {
+  // Existing brand / version on the site (new submissions only)
+  if (!isUpdate && sub.brand) {
     const brandFile = join(ROOT, 'brands', sub.brand, 'brand.yml');
     if (existsSync(brandFile)) {
       const existing = YAML.parse(readFileSync(brandFile, 'utf8'));
@@ -79,5 +111,9 @@ export async function validateIssue(issue, token) {
     }
   }
 
-  return { ...sub, errors, notes, artist, logo: errors.length ? null : logo, extras };
+  if (current && logo?.type === 'png' && current.currentType === 'svg') {
+    notes.push('The current version is an SVG. Replacing it with a PNG removes the vector download.');
+  }
+
+  return { ...sub, ...current, isUpdate, errors, notes, artist, logo: errors.length ? null : logo, extras };
 }

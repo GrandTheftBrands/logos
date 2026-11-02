@@ -84,6 +84,33 @@ export function readSubmission(fields) {
   };
 }
 
+/** Reads the "Update a Logo" form. Brand details come from the existing files, not the form. */
+export function readUpdate(fields) {
+  const errors = [];
+  const page = fields['Logo Page']?.trim() ?? '';
+  const match = page.match(/\/brands\/([a-z0-9-]+)\/([a-z0-9-]+)(?:\/([a-z0-9-]+))?\/?(?:[?#].*)?$/i);
+  if (!match) errors.push('**Logo Page** should be a link to the logo, like `…/brands/vice-city-manatees/primary`.');
+
+  const logoUrls = attachmentUrls(fields['New Logo File']);
+  if (logoUrls.length === 0) errors.push('No file found in **New Logo File**. Drag your SVG, PNG or .zip into that box.');
+  if (logoUrls.length > 1) errors.push('**New Logo File** has more than one attachment. Attach one logo.');
+
+  if (!fields["What's Changing?"]?.trim()) errors.push("Say what's changing under **What's Changing?**.");
+
+  const confirmed = (fields['Confirm'] ?? '').match(/- \[x\]/gi)?.length ?? 0;
+  if (confirmed < 3) errors.push('Tick all three boxes under **Confirm**.');
+
+  return {
+    errors,
+    brand: match?.[1]?.toLowerCase() ?? '',
+    variant: match?.[2]?.toLowerCase() ?? '',
+    pageArtist: match?.[3]?.toLowerCase(),
+    changes: fields["What's Changing?"]?.trim() ?? '',
+    logoUrl: logoUrls[0],
+    extraUrls: attachmentUrls(fields['Extra Files (Optional)']),
+  };
+}
+
 // ---------- File checks ----------
 
 export function sniff(buf) {
@@ -155,6 +182,25 @@ export function checkExtra(buf, name) {
   if (!LIMITS.extraTypes.includes(type)) return [`**${name}** isn't a GIF, MP4 or EPS.`];
   if (buf.length > LIMITS.extraBytes) return [`**${name}** is over 20 MB.`];
   return [];
+}
+
+/** Current (left) and new (right) on the site's dark background, for updates. */
+export async function renderComparison(oldBuf, newBuf) {
+  const W = 1200, H = 600, PAD = 60, box = W / 2 - PAD * 2;
+  const fit = async (buf) => {
+    const png = await sharp(buf, { density: 300 }).resize(box, H - PAD * 2, { fit: 'inside' }).png().toBuffer();
+    const { width, height } = await sharp(png).metadata();
+    return { png, left: Math.round((W / 2 - width) / 2), top: Math.round((H - height) / 2) };
+  };
+  const [a, b] = await Promise.all([fit(oldBuf), fit(newBuf)]);
+  return sharp({ create: { width: W, height: H, channels: 4, background: '#201938' } })
+    .composite([
+      { input: { create: { width: 2, height: H - PAD * 2, channels: 4, background: '#ffffff33' } }, left: W / 2 - 1, top: PAD },
+      { input: a.png, left: a.left, top: a.top },
+      { input: b.png, left: W / 2 + b.left, top: b.top },
+    ])
+    .png()
+    .toBuffer();
 }
 
 /** Dark and light side by side, like the site's preview toggle. */
