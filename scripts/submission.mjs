@@ -4,8 +4,31 @@ import { join } from 'node:path';
 import YAML from 'yaml';
 import { ROOT, checkExtra, checkLogo, download, parseIssueForm, readSubmission, taxonomy } from './lib.mjs';
 
+const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
+/**
+ * Attachments in private repos 404 for bots. The API's rendered issue HTML carries
+ * short-lived signed links for them, so map each attachment's ID to its signed link.
+ */
+async function signedAttachmentUrls(issueNumber, token) {
+  const res = await fetch(`https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/issues/${issueNumber}`, {
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.full+json' },
+  });
+  const map = new Map();
+  if (!res.ok) return map;
+  const { body_html = '' } = await res.json();
+  for (const [raw] of body_html.matchAll(/https:\/\/private-user-images\.githubusercontent\.com\/[^"'\s<>]+/g)) {
+    const url = raw.replace(/&amp;/g, '&');
+    const id = url.match(UUID)?.[0]?.toLowerCase();
+    if (id) map.set(id, url);
+  }
+  return map;
+}
+
 export async function validateIssue(issue, token) {
   const sub = readSubmission(parseIssueForm(issue.body));
+  const signed = await signedAttachmentUrls(issue.number, token);
+  const fetchable = (url) => signed.get(url.match(UUID)?.[0]?.toLowerCase()) ?? url;
   const errors = [...sub.errors];
   const notes = [];
   const artist = issue.user.login.toLowerCase();
@@ -13,7 +36,7 @@ export async function validateIssue(issue, token) {
   let logo = null;
   if (sub.logoUrl) {
     try {
-      logo = await checkLogo(await download(sub.logoUrl, token));
+      logo = await checkLogo(await download(fetchable(sub.logoUrl), token));
       errors.push(...logo.errors);
     } catch (e) {
       errors.push(`Couldn't download the logo file. Try attaching it again. (${e.message})`);
@@ -23,7 +46,7 @@ export async function validateIssue(issue, token) {
   const extras = [];
   for (const [i, url] of sub.extraUrls.entries()) {
     try {
-      const buf = await download(url, token);
+      const buf = await download(fetchable(url), token);
       const name = decodeURIComponent(url.split('/').pop().split('?')[0]) || `extra-${i + 1}`;
       const problems = checkExtra(buf, name);
       errors.push(...problems);

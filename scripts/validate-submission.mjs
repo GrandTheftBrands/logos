@@ -42,7 +42,8 @@ const put = await api(`/repos/{repo}/contents/${path}`, {
     ...(existing ? { sha: existing.sha } : {}),
   },
 });
-const image = `https://raw.githubusercontent.com/${repo}/previews/${path}?v=${put.content.sha.slice(0, 7)}`;
+// github.com/…?raw=true (not raw.githubusercontent.com) also displays for members while the repo is private
+const image = `https://github.com/${repo}/blob/previews/${path}?raw=true&v=${put.content.sha.slice(0, 7)}`;
 
 const { logo } = result;
 await upsertComment(api, issue.number, [

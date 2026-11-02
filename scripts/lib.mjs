@@ -172,7 +172,9 @@ export async function renderPreview(buf) {
 // ---------- GitHub ----------
 
 export async function download(url, token) {
-  const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {}, redirect: 'follow' });
+  // Only send the token to GitHub itself; signed attachment links carry their own auth
+  const auth = token && new URL(url).hostname === 'github.com' ? { Authorization: `Bearer ${token}` } : {};
+  const res = await fetch(url, { headers: auth, redirect: 'follow' });
   if (!res.ok) throw new Error(`Couldn't download ${url} (HTTP ${res.status}).`);
   return Buffer.from(await res.arrayBuffer());
 }
