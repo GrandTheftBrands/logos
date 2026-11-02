@@ -32,16 +32,25 @@ if (!(await api('/repos/{repo}/branches/previews'))) {
   const main = await api('/repos/{repo}/git/ref/heads/main');
   await api('/repos/{repo}/git/refs', { method: 'POST', body: { ref: 'refs/heads/previews', sha: main.object.sha } });
 }
-const existing = await api(`/repos/{repo}/contents/${path}?ref=previews`);
-const put = await api(`/repos/{repo}/contents/${path}`, {
-  method: 'PUT',
-  body: {
-    message: `Preview for #${issue.number}`,
-    content: png.toString('base64'),
-    branch: 'previews',
-    ...(existing ? { sha: existing.sha } : {}),
-  },
-});
+// Other submissions write to the same branch; retry if one landed between our read and write
+let put;
+for (let attempt = 1; !put; attempt++) {
+  const existing = await api(`/repos/{repo}/contents/${path}?ref=previews`);
+  try {
+    put = await api(`/repos/{repo}/contents/${path}`, {
+      method: 'PUT',
+      body: {
+        message: `Preview for #${issue.number}`,
+        content: png.toString('base64'),
+        branch: 'previews',
+        ...(existing ? { sha: existing.sha } : {}),
+      },
+    });
+  } catch (e) {
+    if (attempt >= 5 || !/HTTP (409|422)/.test(e.message)) throw e;
+    await new Promise((r) => setTimeout(r, 1000 * attempt + Math.random() * 1000));
+  }
+}
 // github.com/…?raw=true (not raw.githubusercontent.com) also displays for members while the repo is private
 const image = `https://github.com/${repo}/blob/previews/${path}?raw=true&v=${put.content.sha.slice(0, 7)}`;
 

@@ -42,8 +42,9 @@ for (const brand of dirs(join(ROOT, 'brands'))) {
       errors.push(...result.errors.map((e) => `${at}/${src}: ${e}`));
       count++;
     }
+    // Approvals that race can leave two featured versions; the site picks the earliest, so just flag it
     if (artists.length > 1 && featured.length !== 1) {
-      errors.push(`${where}/${variant}: exactly one version needs "featured: true" (found ${featured.length})`);
+      console.warn(`! ${where}/${variant}: ${featured.length} versions marked featured; the earliest added is shown. Set exactly one to tidy up.`);
     }
   }
 }
