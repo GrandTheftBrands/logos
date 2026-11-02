@@ -26,4 +26,5 @@ brands/<brand-slug>/
 | `artist` | GitHub handle credited on the site (same as the folder name) |
 | `added` | Date published, `YYYY-MM-DD` |
 | `featured` | `true` for the version shown in grids when a variant has several artists |
+| `lore` | `canon` (appears in the game) or `fanon` (fan-made / inspired) |
 | `label` | Optional display name for an `other-*` logo type, e.g. `ESU Patch` |

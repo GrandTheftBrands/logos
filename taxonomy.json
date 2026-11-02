@@ -31,5 +31,9 @@
     { "id": "vertical-lockup", "label": "Vertical Lockup" },
     { "id": "badge", "label": "Badge / Emblem" },
     { "id": "other", "label": "Other" }
+  ],
+  "lore": [
+    { "id": "canon", "label": "Canon" },
+    { "id": "fanon", "label": "Fanon" }
   ]
 }

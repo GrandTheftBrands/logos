@@ -66,6 +66,7 @@ await upsertComment(api, issue.number, [
   `| Game | ${label(taxonomy.games, result.game)} |`,
   `| Category | ${label(taxonomy.categories, result.category)} |`,
   `| Logo Type | ${result.variantLabel} |`,
+  `| Canon or Fanon | ${label(taxonomy.lore, result.lore)} |`,
   `| File | ${logo.type.toUpperCase()}, ${logo.width} × ${logo.height}${logo.type === 'svg' ? ' (vector)' : ''} |`,
   ...(result.extras.length ? [`| Extras | ${result.extras.map((e) => e.name).join(', ')} |`] : []),
   `| Credited To | @${issue.user.login} |`,

@@ -66,6 +66,16 @@ body:
         - Other
     validations:
       required: true
+  - type: dropdown
+    id: lore
+    attributes:
+      label: Canon or Fanon
+      description: "Canon: the logo appears in the game. Fanon: fan-made, or inspired by the game but not in it."
+      options:
+        - Canon
+        - Fanon
+    validations:
+      required: true
   - type: input
     id: variant-other
     attributes:

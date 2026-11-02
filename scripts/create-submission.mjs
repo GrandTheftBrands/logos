@@ -79,6 +79,7 @@ writeFileSync(join(dir, 'meta.yml'), YAML.stringify({
   artist,
   added: new Date().toISOString().slice(0, 10),
   featured: !hasOthers,
+  lore: result.lore,
   // Keeps the artist's exact wording ("ESU Patch"), which the folder name can't
   ...(variant.startsWith('other-') ? { label: result.variantLabel } : {}),
 }));
