@@ -27,6 +27,10 @@ We generate PNGs, a JPG and a ZIP from your file, so you only need to upload one
 - **One logo per submission.** Submit each logo type (icon, wordmark, lockup…) separately.
 - **Already on the site?** You can still submit your version; it's added as an alternate with your credit.
 
+## Update Your Logo
+
+Want to add an SVG, or replace your logo with a better version? Open **[Update a Logo](../../issues/new?template=update-logo.yml)** and paste the logo's page link. It's checked like a new submission, and the bot shows your current and new versions side by side. You can only update logos you're credited for.
+
 ## Requests
 
 Want a logo that isn't here? **[Request it](../../issues/new?template=request-logo.yml)**, or 👍 an existing request.

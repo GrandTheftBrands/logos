@@ -34,6 +34,7 @@ for (const brand of dirs(join(ROOT, 'brands'))) {
       if (!meta) { errors.push(`${at}: missing meta.yml`); continue; }
       if (meta.artist !== artist) errors.push(`${at}/meta.yml: artist must be "${artist}"`);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(String(meta.added))) errors.push(`${at}/meta.yml: added must be a YYYY-MM-DD date`);
+      if (meta.updated !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(String(meta.updated))) errors.push(`${at}/meta.yml: updated must be a YYYY-MM-DD date`);
       if (meta.lore !== undefined && !ids(taxonomy.lore).includes(meta.lore)) errors.push(`${at}/meta.yml: lore must be canon or fanon`);
       if (meta.featured) featured.push(artist);
 
