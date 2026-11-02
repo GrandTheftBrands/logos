@@ -1,0 +1,99 @@
+name: Submit a Logo
+description: Add your recreation of a GTA brand logo to Grand Theft Brands.
+title: "[Submission] "
+labels: ["submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing! Once you submit, a bot checks your file and posts a preview here within a minute or two. A maintainer then reviews it, and you'll be credited on the site with your GitHub account.
+
+        **File requirements:** an **SVG** (preferred) or a **PNG at least 1024px** on its longest side, with a transparent background. If GitHub won't accept your SVG, zip it and attach the .zip.
+  - type: input
+    id: brand
+    attributes:
+      label: Brand Name
+      description: The brand as it appears in the game.
+      placeholder: Vice City Manatees
+    validations:
+      required: true
+  - type: dropdown
+    id: game
+    attributes:
+      label: Game
+      options:
+        - GTA VI
+        - GTA V
+        - GTA IV
+        - GTA III
+        - GTA SA
+        - GTA VC
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Business
+        - Food
+        - Apps & Web
+        - Radio
+        - Vehicles
+        - Locations
+        - Weapons
+        - Sports
+        - Media, TV & Film
+        - Fashion & Clothing
+        - Gangs & Organisations
+    validations:
+      required: true
+  - type: dropdown
+    id: variant
+    attributes:
+      label: Logo Type
+      description: Which version of the brand's logo is this?
+      options:
+        - Primary Logo
+        - Icon
+        - Wordmark
+        - Text Lockup
+        - Horizontal Lockup
+        - Vertical Lockup
+        - Badge / Emblem
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: variant-other
+    attributes:
+      label: Logo Type Name (Only if "Other")
+      placeholder: Billboard Lockup
+  - type: textarea
+    id: logo
+    attributes:
+      label: Logo File
+      description: Drag your SVG, PNG or .zip into this box.
+    validations:
+      required: true
+  - type: textarea
+    id: extras
+    attributes:
+      label: Extra Files (Optional)
+      description: Animated GIF or MP4 versions, or an EPS. Attach them here.
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes (Optional)
+      description: Anything the reviewer should know, such as reference screenshots from the game.
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirm
+      options:
+        - label: I recreated this logo myself.
+          required: true
+        - label: I did not use AI to create any part of it.
+          required: true
+        - label: I agree that it can be shared for free on Grand Theft Brands under the site's terms.
+          required: true

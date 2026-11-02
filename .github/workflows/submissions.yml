@@ -1,0 +1,67 @@
+name: Submissions
+
+on:
+  issues:
+    types: [opened, edited, reopened, labeled]
+
+# One run per issue at a time; a newer edit replaces an older check
+concurrency:
+  group: submission-${{ github.event.issue.number }}
+  cancel-in-progress: ${{ github.event.action != 'labeled' }}
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  submission:
+    if: >-
+      contains(github.event.issue.labels.*.name, 'submission') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'approved')
+    runs-on: ubuntu-latest
+    env:
+      HAS_APP: ${{ secrets.GTB_APP_ID != '' }}
+    steps:
+      # gtb-bot (GitHub App) when configured, so its PRs trigger checks; otherwise github-actions[bot]
+      - id: app
+        if: env.HAS_APP == 'true'
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.GTB_APP_ID }}
+          private-key: ${{ secrets.GTB_APP_PRIVATE_KEY }}
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app.outputs.token || github.token }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Check submission
+        if: github.event.action != 'labeled'
+        run: node scripts/validate-submission.mjs
+        env:
+          GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}
+
+      - name: Set commit identity
+        if: github.event.action == 'labeled'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token || github.token }}
+          SLUG: ${{ steps.app.outputs.app-slug }}
+        run: |
+          if [ -n "$SLUG" ]; then
+            id=$(gh api "/users/${SLUG}[bot]" --jq .id)
+            git config user.name "${SLUG}[bot]"
+            git config user.email "${id}+${SLUG}[bot]@users.noreply.github.com"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          fi
+
+      - name: Open pull request
+        if: github.event.action == 'labeled'
+        run: node scripts/create-submission.mjs
+        env:
+          GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}

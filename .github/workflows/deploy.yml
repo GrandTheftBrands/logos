@@ -1,0 +1,24 @@
+name: Rebuild Site
+
+# Rebuilds grandtheftbrands via a Cloudflare Pages deploy hook when logos change
+# or the list of open requests changes.
+on:
+  push:
+    branches: [main]
+    paths: ['brands/**']
+  issues:
+    types: [opened, closed, reopened, deleted]
+
+permissions: {}
+
+jobs:
+  deploy:
+    if: github.event_name == 'push' || contains(github.event.issue.labels.*.name, 'request')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cloudflare Pages build
+        env:
+          HOOK: ${{ secrets.CF_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "CF_DEPLOY_HOOK not set; skipping"; exit 0; fi
+          curl -fsS -X POST "$HOOK" > /dev/null && echo "Rebuild triggered"

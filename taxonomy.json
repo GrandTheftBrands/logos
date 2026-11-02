@@ -1,0 +1,33 @@
+{
+  "games": [
+    { "id": "vi", "label": "GTA VI" },
+    { "id": "v", "label": "GTA V" },
+    { "id": "iv", "label": "GTA IV" },
+    { "id": "iii", "label": "GTA III" },
+    { "id": "sa", "label": "GTA SA" },
+    { "id": "vc", "label": "GTA VC" }
+  ],
+  "categories": [
+    { "id": "business", "label": "Business" },
+    { "id": "food", "label": "Food" },
+    { "id": "apps-web", "label": "Apps & Web" },
+    { "id": "radio", "label": "Radio" },
+    { "id": "vehicles", "label": "Vehicles" },
+    { "id": "locations", "label": "Locations" },
+    { "id": "weapons", "label": "Weapons" },
+    { "id": "sports", "label": "Sports" },
+    { "id": "media", "label": "Media, TV & Film" },
+    { "id": "fashion", "label": "Fashion & Clothing" },
+    { "id": "organisations", "label": "Gangs & Organisations" }
+  ],
+  "variants": [
+    { "id": "primary", "label": "Primary Logo" },
+    { "id": "icon", "label": "Icon" },
+    { "id": "wordmark", "label": "Wordmark" },
+    { "id": "text-lockup", "label": "Text Lockup" },
+    { "id": "horizontal-lockup", "label": "Horizontal Lockup" },
+    { "id": "vertical-lockup", "label": "Vertical Lockup" },
+    { "id": "badge", "label": "Badge / Emblem" },
+    { "id": "other", "label": "Other" }
+  ]
+}

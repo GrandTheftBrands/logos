@@ -1,0 +1,13 @@
+{
+  "name": "grandtheftbrands-logos",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/check-content.mjs"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3",
+    "sharp": "^0.35.5",
+    "yaml": "^2.9.1"
+  }
+}

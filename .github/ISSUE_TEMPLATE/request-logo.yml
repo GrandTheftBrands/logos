@@ -1,0 +1,33 @@
+name: Request a Logo
+description: Ask the community to recreate a logo that isn't on the site yet.
+title: "[Request] "
+labels: ["request"]
+body:
+  - type: markdown
+    attributes:
+      value: Search the site first to check it isn't already there. Add a 👍 to existing requests instead of opening duplicates.
+  - type: input
+    id: brand
+    attributes:
+      label: Brand Name
+      placeholder: Weazel News
+    validations:
+      required: true
+  - type: dropdown
+    id: game
+    attributes:
+      label: Game
+      options:
+        - GTA VI
+        - GTA V
+        - GTA IV
+        - GTA III
+        - GTA SA
+        - GTA VC
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference
+      description: Screenshots or links showing the logo in the game.
