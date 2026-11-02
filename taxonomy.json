@@ -18,6 +18,8 @@
     { "id": "sports", "label": "Sports" },
     { "id": "media", "label": "Media, TV & Film" },
     { "id": "fashion", "label": "Fashion & Clothing" },
+    { "id": "government", "label": "Government" },
+    { "id": "emergency", "label": "Emergency Services" },
     { "id": "organisations", "label": "Gangs & Organisations" }
   ],
   "variants": [

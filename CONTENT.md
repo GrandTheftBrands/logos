@@ -15,7 +15,7 @@ brands/<brand-slug>/
 |---|---|
 | `name` | Display name, e.g. `Vice City Manatees` |
 | `game` | `vi` `v` `iv` `iii` `sa` `vc` |
-| `category` | `business` `food` `apps-web` `radio` `vehicles` `locations` `weapons` `sports` `media` `fashion` `organisations` |
+| `category` | `business` `food` `apps-web` `radio` `vehicles` `locations` `weapons` `sports` `media` `fashion` `government` `emergency` `organisations` |
 
 **Variant folders**: `primary` `icon` `wordmark` `text-lockup` `horizontal-lockup` `vertical-lockup` `badge`, or `other-<name>`.
 

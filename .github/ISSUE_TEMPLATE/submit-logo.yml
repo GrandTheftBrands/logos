@@ -45,6 +45,8 @@ body:
         - Sports
         - Media, TV & Film
         - Fashion & Clothing
+        - Government
+        - Emergency Services
         - Gangs & Organisations
     validations:
       required: true

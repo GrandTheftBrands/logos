@@ -78,4 +78,5 @@ const pr = open?.[0] ?? (await api('/repos/{repo}/pulls', {
   },
 }));
 
+await setLabels(api, issue.number, [], ['needs-changes']);
 await upsertComment(api, issue.number, `### Approved\n\nThanks @${issue.user.login}! It’s in pull request #${pr.number}, and goes live on the site as soon as that’s merged.`);
