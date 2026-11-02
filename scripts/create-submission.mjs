@@ -38,6 +38,32 @@ const { brand, variant, artist, logo } = result;
 const brandDir = join(ROOT, 'brands', brand);
 const variantDir = join(brandDir, variant);
 const dir = join(variantDir, artist);
+const slot = `brands/${brand}/${variant}/${artist}/`;
+const branch = `submission/${issue.number}`;
+
+// Never silently overwrite: an artist's version that's live, or waiting in another
+// submission PR, is only replaced when a maintainer adds the "replace" label.
+if (!issue.labels.some((l) => l.name === 'replace')) {
+  const clashes = [];
+  if (existsSync(dir)) clashes.push(`it's already on the site at \`/brands/${brand}/${variant}\``);
+  const open = (await api('/repos/{repo}/pulls?state=open&per_page=100')) ?? [];
+  for (const pr of open.filter((p) => p.head.ref.startsWith('submission/') && p.head.ref !== branch)) {
+    const files = (await api(`/repos/{repo}/pulls/${pr.number}/files?per_page=100`)) ?? [];
+    if (files.some((f) => f.filename.startsWith(slot))) clashes.push(`#${pr.number} is about to add one`);
+  }
+  if (clashes.length) {
+    await upsertComment(api, issue.number, [
+      '### Would Replace Another Version',
+      '',
+      `@${issue.user.login} already has a **${result.brandName} ${result.variantLabel}**: ${clashes.join(', and ')}.`,
+      '',
+      '- **Different logo?** Edit this issue and change **Logo Type** (use **Other** and name it, e.g. "Old Logo"), then approve again.',
+      '- **Meant to replace it?** Add the **replace** label, then approve again.',
+    ].join('\n'));
+    await setLabels(api, issue.number, [], ['approved']);
+    process.exit(0);
+  }
+}
 
 if (!existsSync(join(brandDir, 'brand.yml'))) {
   mkdirSync(brandDir, { recursive: true });
@@ -59,7 +85,6 @@ if (result.extras.length) {
   for (const e of result.extras) writeFileSync(join(dir, 'extras', e.name), e.buf);
 }
 
-const branch = `submission/${issue.number}`;
 const title = `Add ${result.brandName} ${result.variantLabel} by @${issue.user.login}`;
 git('checkout', '-B', branch);
 git('add', 'brands');
