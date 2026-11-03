@@ -4,9 +4,11 @@ on:
   issues:
     types: [opened, edited, reopened, labeled]
 
-# One run per issue at a time; a newer edit replaces an older check
+# One run per issue at a time; a newer edit replaces an older check.
+# Approvals share one queue because they all rebuild the same combined pull request;
+# if one gets skipped while queued, the next approval still includes it.
 concurrency:
-  group: submission-${{ github.event.issue.number }}
+  group: ${{ github.event.label.name == 'approved' && 'submission-approvals' || format('submission-{0}', github.event.issue.number) }}
   cancel-in-progress: ${{ github.event.action != 'labeled' }}
 
 permissions:
