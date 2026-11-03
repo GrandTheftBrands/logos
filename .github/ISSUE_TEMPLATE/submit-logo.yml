@@ -34,7 +34,9 @@ body:
     id: category
     attributes:
       label: Category
+      description: Pick "Game Logos" for the games' own logos, like the GTA V logo or The Ballad of Gay Tony.
       options:
+        - Game Logos
         - Business
         - Food
         - Apps & Web

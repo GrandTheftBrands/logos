@@ -8,6 +8,7 @@
     { "id": "vc", "label": "GTA VC" }
   ],
   "categories": [
+    { "id": "game-logos", "label": "Game Logos" },
     { "id": "business", "label": "Business" },
     { "id": "food", "label": "Food" },
     { "id": "apps-web", "label": "Apps & Web" },
