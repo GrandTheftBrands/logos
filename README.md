@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/banner.png" alt="Grand Theft Brands: Community Logos Repo" width="800"></p>
+
 # Grand Theft Brands — Logos
 
 Community-made recreations of brand logos from the Grand Theft Auto series, free to download at Grand Theft Brands.
