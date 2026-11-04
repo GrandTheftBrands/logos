@@ -97,7 +97,12 @@ function writeFiles({ result, at }) {
 
   if (!existsSync(join(brandDir, 'brand.yml'))) {
     mkdirSync(brandDir, { recursive: true });
-    writeFileSync(join(brandDir, 'brand.yml'), YAML.stringify({ name: result.brandName, game: result.game, category: result.category }));
+    writeFileSync(join(brandDir, 'brand.yml'), YAML.stringify({
+      name: result.brandName,
+      game: result.game,
+      category: result.category,
+      ...(result.brandDescription ? { description: result.brandDescription } : {}),
+    }));
   }
 
   if (result.isUpdate) {

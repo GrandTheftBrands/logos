@@ -63,6 +63,9 @@ export function readSubmission(fields) {
   const lore = idFor(taxonomy.lore, fields['Canon or Fanon']);
   if (!lore) errors.push('Pick **Canon** or **Fanon**.');
 
+  const brandDescription = (fields['Brand Description (Optional)'] ?? '').split(/\s+/).join(' ').trim();
+  if (brandDescription.length > 300) errors.push('**Brand Description** is too long. Keep it under 300 characters.');
+
   const logoUrls = attachmentUrls(fields['Logo File']);
   if (logoUrls.length === 0) errors.push('No file found in **Logo File**. Drag your SVG, PNG or .zip into that box.');
   if (logoUrls.length > 1) errors.push('**Logo File** has more than one attachment. Attach one logo per submission.');
@@ -79,6 +82,7 @@ export function readSubmission(fields) {
     variant,
     variantLabel,
     lore,
+    brandDescription,
     logoUrl: logoUrls[0],
     extraUrls: attachmentUrls(fields['Extra Files (Optional)']),
   };

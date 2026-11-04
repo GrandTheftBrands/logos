@@ -96,6 +96,12 @@ body:
       label: Extra Files (Optional)
       description: Animated GIF or MP4 versions, or an EPS. Attach them here.
   - type: textarea
+    id: brand-description
+    attributes:
+      label: Brand Description (Optional)
+      description: One or two sentences about the brand for its page on the site, such as what it is and where it appears in the game. Only used the first time a brand is added.
+      placeholder: Vice City's professional basketball team, seen on billboards around Leonida.
+  - type: textarea
     id: notes
     attributes:
       label: Notes (Optional)

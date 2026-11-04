@@ -22,6 +22,7 @@ for (const brand of dirs(join(ROOT, 'brands'))) {
   const info = YAML.parse(readFileSync(brandFile, 'utf8')) ?? {};
   if (!info.name) errors.push(`${where}/brand.yml: missing name`);
   if (!ids(taxonomy.games).includes(info.game)) errors.push(`${where}/brand.yml: game "${info.game}" isn't one of ${ids(taxonomy.games).join(', ')}`);
+  if (info.description !== undefined && (typeof info.description !== 'string' || info.description.length > 300)) errors.push(`${where}/brand.yml: description must be text under 300 characters`);
   if (!ids(taxonomy.categories).includes(info.category)) errors.push(`${where}/brand.yml: category "${info.category}" isn't one of ${ids(taxonomy.categories).join(', ')}`);
 
   for (const variant of dirs(join(ROOT, where))) {

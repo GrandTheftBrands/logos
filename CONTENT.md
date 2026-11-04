@@ -15,6 +15,7 @@ brands/<brand-slug>/
 |---|---|
 | `name` | Display name, e.g. `Vice City Manatees` |
 | `game` | `vi` `v` `iv` `iii` `sa` `vc` |
+| `description` | Optional. One or two sentences shown on the brand's page and in search results (under 300 characters) |
 | `category` | `game-logos` (the games' own logos) `business` `food` `apps-web` `radio` `vehicles` `locations` `weapons` `sports` `media` `fashion` `government` `emergency` `organisations` |
 
 **Variant folders**: `primary` `icon` `wordmark` `text-lockup` `horizontal-lockup` `vertical-lockup` `badge`, or `other-<name>`.
