@@ -10,6 +10,8 @@ const ids = (list) => list.map((x) => x.id);
 const variantOk = (v) => (ids(taxonomy.variants).includes(v) && v !== 'other') || /^other-[a-z0-9]+(-[a-z0-9]+)*$/.test(v);
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const HANDLE = /^[a-z0-9](?:[a-z0-9-]{0,38})$/;
+// A day, or the exact UTC time the bot approved it
+const DATE = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}Z)?$/;
 
 let count = 0;
 for (const brand of dirs(join(ROOT, 'brands'))) {
@@ -33,8 +35,8 @@ for (const brand of dirs(join(ROOT, 'brands'))) {
       const meta = existsSync(join(dir, 'meta.yml')) ? YAML.parse(readFileSync(join(dir, 'meta.yml'), 'utf8')) ?? {} : null;
       if (!meta) { errors.push(`${at}: missing meta.yml`); continue; }
       if (meta.artist !== artist) errors.push(`${at}/meta.yml: artist must be "${artist}"`);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(meta.added))) errors.push(`${at}/meta.yml: added must be a YYYY-MM-DD date`);
-      if (meta.updated !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(String(meta.updated))) errors.push(`${at}/meta.yml: updated must be a YYYY-MM-DD date`);
+      if (!DATE.test(String(meta.added))) errors.push(`${at}/meta.yml: added must be a YYYY-MM-DD date or UTC time (2026-11-03T21:05:00Z)`);
+      if (meta.updated !== undefined && !DATE.test(String(meta.updated))) errors.push(`${at}/meta.yml: updated must be a YYYY-MM-DD date or UTC time (2026-11-03T21:05:00Z)`);
       if (meta.lore !== undefined && !ids(taxonomy.lore).includes(meta.lore)) errors.push(`${at}/meta.yml: lore must be canon or fanon`);
       if (meta.featured) featured.push(artist);
 

@@ -78,9 +78,18 @@ for (const item of waiting) {
 // Nothing new to publish: leave any open PR as it is
 if (!batch.some((b) => b.issue.number === issue.number)) process.exit(0);
 
-const today = new Date().toISOString().slice(0, 10);
+// When each submission was approved (to the second), so same-day uploads keep their order.
+// A batch is rebuilt on every approval, so this can't simply be "now".
+const now = () => `${new Date().toISOString().slice(0, 19)}Z`;
+const approvedAt = async (number) => {
+  if (number === issue.number) return now();
+  const events = (await api(`/repos/{repo}/issues/${number}/events?per_page=100`)) ?? [];
+  const last = events.filter((e) => e.event === 'labeled' && e.label?.name === 'approved').pop();
+  return last?.created_at ?? now();
+};
+for (const b of batch) b.at = await approvedAt(b.issue.number);
 
-function writeFiles({ result }) {
+function writeFiles({ result, at }) {
   const { brand, variant, artist, logo } = result;
   const brandDir = join(ROOT, 'brands', brand);
   const variantDir = join(brandDir, variant);
@@ -95,7 +104,7 @@ function writeFiles({ result }) {
     // Swap the file, keep everything else; extras are replaced only if new ones were attached
     for (const f of ['logo.svg', 'logo.png']) rmSync(join(dir, f), { force: true });
     writeFileSync(join(dir, `logo.${logo.type}`), logo.buf);
-    writeFileSync(join(dir, 'meta.yml'), YAML.stringify({ ...result.meta, updated: today }));
+    writeFileSync(join(dir, 'meta.yml'), YAML.stringify({ ...result.meta, updated: at }));
     if (result.extras.length) {
       rmSync(join(dir, 'extras'), { recursive: true, force: true });
       mkdirSync(join(dir, 'extras'));
@@ -111,7 +120,7 @@ function writeFiles({ result }) {
   writeFileSync(join(dir, `logo.${logo.type}`), logo.buf);
   writeFileSync(join(dir, 'meta.yml'), YAML.stringify({
     artist,
-    added: today,
+    added: at,
     featured: !hasOthers,
     lore: result.lore,
     // Keeps the artist's exact wording ("ESU Patch"), which the folder name can't
