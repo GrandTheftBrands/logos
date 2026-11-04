@@ -42,13 +42,14 @@ jobs:
       - run: npm ci
 
       - name: Check submission
+        id: check
         if: github.event.action != 'labeled'
         run: node scripts/validate-submission.mjs
         env:
           GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}
 
       - name: Set commit identity
-        if: github.event.action == 'labeled'
+        if: github.event.action == 'labeled' || steps.check.outputs.instant == 'true'
         env:
           GH_TOKEN: ${{ steps.app.outputs.token || github.token }}
           SLUG: ${{ steps.app.outputs.app-slug }}
@@ -67,3 +68,11 @@ jobs:
         run: node scripts/create-submission.mjs
         env:
           GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}
+
+      # Instant Approval (and Primary Members): approved as soon as the check passes
+      - name: Approve automatically
+        if: steps.check.outputs.instant == 'true'
+        run: node scripts/create-submission.mjs
+        env:
+          GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}
+          AUTO_APPROVE: '1'

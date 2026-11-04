@@ -1,5 +1,7 @@
 // On submission issues opened or edited: check the files, post a preview, set labels.
-import { readFileSync } from 'node:fs';
+// Instant Approval: if the author has Triage access or higher on this repo (the instant-approval
+// and primary-members teams), the workflow's next step approves it straight away.
+import { appendFileSync, readFileSync } from 'node:fs';
 import { github, renderComparison, renderPreview, setLabels, taxonomy, upsertComment } from './lib.mjs';
 import { validateIssue } from './submission.mjs';
 
@@ -11,6 +13,8 @@ const api = github(token);
 if (issue.state !== 'open' || !issue.labels.some((l) => l.name === 'submission')) process.exit(0);
 
 const result = await validateIssue(issue, token);
+const role = (await api(`/repos/{repo}/collaborators/${issue.user.login}/permission`))?.role_name;
+const instant = ['triage', 'write', 'maintain', 'admin'].includes(role);
 const label = (list, id) => list.find((x) => x.id === id)?.label ?? id;
 
 if (result.errors.length) {
@@ -81,6 +85,9 @@ await upsertComment(api, issue.number, [
   '',
   ...result.notes.map((n) => `> ${n}`),
   ...(result.notes.length ? [''] : []),
-  'A maintainer will review this soon. You can still edit the issue; I’ll re-check it.',
+  instant
+    ? 'You have **Instant Approval**, so this is approved automatically. A maintainer will merge it soon.'
+    : 'A maintainer will review this soon. You can still edit the issue; I’ll re-check it.',
 ].join('\n'));
 await setLabels(api, issue.number, ['ready-for-review'], ['needs-changes']);
+if (instant && process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, 'instant=true\n');

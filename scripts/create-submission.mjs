@@ -14,13 +14,22 @@ const { issue, sender } = event;
 const api = github(token);
 const git = (...args) => execFileSync('git', args, { cwd: ROOT, stdio: 'inherit' });
 
-if (event.label?.name !== 'approved' || !issue.labels.some((l) => l.name === 'submission')) process.exit(0);
+// AUTO_APPROVE: the author has Instant Approval (checked by validate-submission.mjs just before)
+const auto = process.env.AUTO_APPROVE === '1';
+if ((!auto && event.label?.name !== 'approved') || !issue.labels.some((l) => l.name === 'submission')) process.exit(0);
 
-// Only people with write access can approve
-const perm = await api(`/repos/{repo}/collaborators/${sender.login}/permission`);
-if (!['admin', 'maintain', 'write'].includes(perm?.permission)) {
-  await setLabels(api, issue.number, [], ['approved']);
-  process.exit(0);
+// The bot labelling an Instant Approval itself was already handled by that run
+if (!auto && sender.type === 'Bot') process.exit(0);
+
+if (auto) {
+  await setLabels(api, issue.number, ['approved']);
+} else {
+  // Only people with write access can approve
+  const perm = await api(`/repos/{repo}/collaborators/${sender.login}/permission`);
+  if (!['admin', 'maintain', 'write'].includes(perm?.permission)) {
+    await setLabels(api, issue.number, [], ['approved']);
+    process.exit(0);
+  }
 }
 
 const cantPublish = async (number, errors) => {
@@ -164,7 +173,7 @@ const pr = existing?.[0] ?? (await api('/repos/{repo}/pulls', {
     title: batch.length === 1 ? titleOf(batch[0]) : `Add ${batch.length} Submissions (${numbers.map((n) => `#${n}`).join(', ')})`,
     head: branch,
     base: 'main',
-    body: `${batch.map(describe).join('\n')}\n\nLatest approval by @${sender.login}. Merging publishes all of these at once.`,
+    body: `${batch.map(describe).join('\n')}\n\n${auto ? `Latest: @${issue.user.login}'s submission, approved automatically (Instant Approval).` : `Latest approval by @${sender.login}.`} Merging publishes all of these at once.`,
   },
 }));
 
