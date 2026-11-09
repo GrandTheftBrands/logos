@@ -1,6 +1,6 @@
 // Shared helpers for the submission workflows and the content check.
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { unzipSync } from 'fflate';
 import sharp from 'sharp';
 
@@ -48,16 +48,21 @@ export function readSubmission(fields) {
   const category = idFor(taxonomy.categories, fields['Category']);
   if (!category) errors.push('Pick a **Category** from the list.');
 
+  // A name makes it its own logo: "Icon (Alternate)" in icon-alternate. Required for Other.
+  // (Older issues have the field under its previous label.)
   let variant = idFor(taxonomy.variants, fields['Logo Type']);
   let variantLabel = fields['Logo Type'];
+  const name = (fields['Logo Name (Optional)'] ?? fields['Logo Type Name (Only if "Other")'])?.trim();
   if (!variant) errors.push('Pick a **Logo Type** from the list.');
   if (variant === 'other') {
-    const name = fields['Logo Type Name (Only if "Other")']?.trim();
-    if (!name) errors.push('You picked **Other** as the logo type. Fill in **Logo Type Name** too.');
+    if (!name || !slugify(name)) errors.push('You picked **Other** as the logo type. Fill in **Logo Name** too.');
     else {
       variant = `other-${slugify(name)}`;
       variantLabel = name;
     }
+  } else if (variant && name && slugify(name)) {
+    variant = `${variant}-${slugify(name)}`;
+    variantLabel = `${variantLabel} (${name})`;
   }
 
   const lore = idFor(taxonomy.lore, fields['Canon or Fanon']);
@@ -86,6 +91,18 @@ export function readSubmission(fields) {
     logoUrl: logoUrls[0],
     extraUrls: attachmentUrls(fields['Extra Files (Optional)']),
   };
+}
+
+/**
+ * Every submission is its own logo: the first free slot of icon, icon-2, icon-3… (labelled
+ * "Icon", "Icon 2"…). `claimed` holds "brand/variant" slots already taken in this batch.
+ */
+export function freeSlot(brand, variant, variantLabel, claimed = new Set()) {
+  const taken = (v) => claimed.has(`${brand}/${v}`) || existsSync(join(ROOT, 'brands', brand, v));
+  if (!taken(variant)) return { variant, variantLabel };
+  for (let n = 2; ; n++) {
+    if (!taken(`${variant}-${n}`)) return { variant: `${variant}-${n}`, variantLabel: `${variantLabel} ${n}` };
+  }
 }
 
 /** Reads the "Update a Logo" form. Brand details come from the existing files, not the form. */

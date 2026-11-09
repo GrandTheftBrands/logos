@@ -25,7 +25,7 @@ We generate PNGs, a JPG and a ZIP from your file, so you only need to upload one
 - **Your own work.** Recreate the logo yourself; don't upload rips or other people's files.
 - **No AI.** No part of the logo can be AI-generated. Submissions that look generated are declined.
 - **One logo per submission.** Submit each logo type (icon, wordmark, lockup…) separately.
-- **Already on the site?** You can still submit your version; it's added as an alternate with your credit.
+- **Brand already has this type of logo?** Submit yours anyway. Every submission is its own logo ("Icon 2"), or give it a **Logo Name** like "Alternate".
 
 ## Update Your Logo
 

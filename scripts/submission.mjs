@@ -2,7 +2,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import YAML from 'yaml';
-import { ROOT, checkExtra, checkLogo, download, parseIssueForm, readSubmission, readUpdate, taxonomy } from './lib.mjs';
+import { ROOT, checkExtra, checkLogo, download, freeSlot, parseIssueForm, readSubmission, readUpdate, taxonomy } from './lib.mjs';
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
@@ -101,13 +101,15 @@ export async function validateIssue(issue, token) {
         notes.push(`**${existing.name}** is already in ${label(taxonomy.categories, existing.category)}, so it will stay there.`);
       }
     }
+    // Each submission is its own logo; if the slot is taken it becomes "Icon 2" and so on
     if (sub.variant) {
-      const variantDir = join(ROOT, 'brands', sub.brand, sub.variant);
-      if (existsSync(join(variantDir, artist))) {
-        notes.push('You already have a version of this logo. Approving this one will replace it.');
-      } else if (existsSync(variantDir)) {
-        notes.push('Someone else has already made this logo. Yours will be added as an alternate version.');
+      const slot = freeSlot(sub.brand, sub.variant, sub.variantLabel);
+      if (slot.variant !== sub.variant) {
+        notes.push(`This brand already has a **${sub.variantLabel}**, so this one will be added as **${slot.variantLabel}**. To give it a clearer name, edit the issue and fill in **Logo Name**.`);
       }
+      sub.requestedVariant = sub.variant;
+      sub.requestedLabel = sub.variantLabel;
+      Object.assign(sub, slot);
     }
   }
 

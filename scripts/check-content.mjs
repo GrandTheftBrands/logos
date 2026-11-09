@@ -7,7 +7,10 @@ import { ROOT, checkLogo, taxonomy } from './lib.mjs';
 const errors = [];
 const dirs = (p) => readdirSync(p, { withFileTypes: true }).filter((d) => d.isDirectory() && !d.name.startsWith('.')).map((d) => d.name);
 const ids = (list) => list.map((x) => x.id);
-const variantOk = (v) => (ids(taxonomy.variants).includes(v) && v !== 'other') || /^other-[a-z0-9]+(-[a-z0-9]+)*$/.test(v);
+// A logo type (icon), the same with a name or number (icon-alternate, icon-2), or other-<name>
+const variantOk = (v) =>
+  /^[a-z0-9]+(-[a-z0-9]+)*$/.test(v) &&
+  (/^other-./.test(v) || ids(taxonomy.variants).some((id) => id !== 'other' && (v === id || v.startsWith(`${id}-`))));
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const HANDLE = /^[a-z0-9](?:[a-z0-9-]{0,38})$/;
 // A day, or the exact UTC time the bot approved it

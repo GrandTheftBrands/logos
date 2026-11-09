@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import YAML from 'yaml';
-import { ROOT, github, setLabels, upsertComment } from './lib.mjs';
+import { ROOT, freeSlot, github, setLabels, taxonomy, upsertComment } from './lib.mjs';
 import { validateIssue } from './submission.mjs';
 
 const token = process.env.GITHUB_TOKEN;
@@ -50,37 +50,34 @@ if (!waiting.some((i) => i.number === issue.number)) waiting.push(issue);
 waiting.sort((a, b) => a.number - b.number);
 
 const batch = [];
-const slots = new Map(); // brands/<brand>/<variant>/<artist>/ → issue number already in this batch
+const claimed = new Map(); // "brand/variant" → issue number already in this batch
 for (const item of waiting) {
   const result = await validateIssue(item, token);
   if (result.errors.length) {
     await cantPublish(item.number, result.errors);
     continue;
   }
-  const { brand, variant, artist } = result;
-  const slot = `brands/${brand}/${variant}/${artist}/`;
 
-  // Never silently overwrite: an artist's version that's live, or in another approved
-  // submission, is only replaced when a maintainer adds the "replace" label.
-  // Updates replace on purpose, but still mustn't clash with another submission.
-  if (!item.labels.some((l) => l.name === 'replace')) {
-    const clashes = [];
-    if (!result.isUpdate && existsSync(join(ROOT, slot))) clashes.push(`it's already on the site at \`/brands/${brand}/${variant}\``);
-    if (slots.has(slot)) clashes.push(`#${slots.get(slot)} is about to add one`);
-    if (clashes.length) {
+  if (result.isUpdate) {
+    // Updates replace a live logo on purpose, but two in one batch mustn't touch the same one
+    const key = `${result.brand}/${result.variant}`;
+    if (claimed.has(key)) {
       await upsertComment(api, item.number, [
-        '### Would Replace Another Version',
+        '### Waiting on Another Update',
         '',
-        `@${item.user.login} already has a **${result.brandName} ${result.variantLabel}**: ${clashes.join(', and ')}.`,
-        '',
-        '- **Different logo?** Edit this issue and change **Logo Type** (use **Other** and name it, e.g. "Old Logo"), then approve again.',
-        '- **Meant to replace it?** Add the **replace** label, then approve again.',
+        `#${claimed.get(key)} is already updating **${result.brandName} ${result.variantLabel}**. Approve this one again after that's merged.`,
       ].join('\n'));
       await setLabels(api, item.number, [], ['approved']);
       continue;
     }
+  } else if (item.labels.some((l) => l.name === 'replace')) {
+    // A maintainer asked to overwrite the artist's logo in the requested slot itself
+    Object.assign(result, { variant: result.requestedVariant, variantLabel: result.requestedLabel });
+  } else {
+    // Each submission is its own logo: the next free slot, counting the rest of this batch too
+    Object.assign(result, freeSlot(result.brand, result.requestedVariant, result.requestedLabel, new Set(claimed.keys())));
   }
-  slots.set(slot, item.number);
+  claimed.set(`${result.brand}/${result.variant}`, item.number);
   batch.push({ issue: item, result });
 }
 
@@ -137,8 +134,8 @@ function writeFiles({ result, at }) {
     added: at,
     featured: !hasOthers,
     lore: result.lore,
-    // Keeps the artist's exact wording ("ESU Patch"), which the folder name can't
-    ...(variant.startsWith('other-') ? { label: result.variantLabel } : {}),
+    // Keeps the exact wording ("ESU Patch", "Icon (Alternate)", "Icon 2"), which the folder name can't
+    ...(taxonomy.variants.some((v) => v.id === variant) ? {} : { label: result.variantLabel }),
   }));
   if (result.extras.length) {
     mkdirSync(join(dir, 'extras'));

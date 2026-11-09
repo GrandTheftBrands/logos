@@ -81,8 +81,9 @@ body:
   - type: input
     id: variant-other
     attributes:
-      label: Logo Type Name (Only if "Other")
-      placeholder: Billboard Lockup
+      label: Logo Name (Optional)
+      description: Required for Other. Otherwise optional, to tell this logo apart if the brand has more than one of this type (e.g. "Alternate" or "1990s"). Left blank, a second Icon is called "Icon 2".
+      placeholder: Alternate
   - type: textarea
     id: logo
     attributes:

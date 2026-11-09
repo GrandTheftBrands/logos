@@ -18,7 +18,7 @@ brands/<brand-slug>/
 | `description` | Optional. One or two sentences shown on the brand's page and in search results (under 300 characters) |
 | `category` | `game-logos` (the games' own logos) `business` `food` `apps-web` `radio` `vehicles` `locations` `weapons` `sports` `media` `fashion` `government` `emergency` `organisations` |
 
-**Variant folders**: `primary` `icon` `wordmark` `text-lockup` `horizontal-lockup` `vertical-lockup` `badge`, or `other-<name>`.
+**Variant folders** (one logo each): `primary` `icon` `wordmark` `text-lockup` `horizontal-lockup` `vertical-lockup` `badge`, or `other-<name>`. More than one of a type adds a name or number: `icon-alternate`, `icon-2`.
 
 **meta.yml**
 
@@ -29,4 +29,4 @@ brands/<brand-slug>/
 | `updated` | When the file was last updated, if ever (set by the Update a Logo form), same format |
 | `featured` | `true` for the version shown in grids when a variant has several artists |
 | `lore` | `canon` (appears in the game) or `fanon` (fan-made / inspired) |
-| `label` | Optional display name for an `other-*` logo type, e.g. `ESU Patch` |
+| `label` | Display name when the folder isn't a plain type, e.g. `ESU Patch`, `Icon (Alternate)`, `Icon 2` |
