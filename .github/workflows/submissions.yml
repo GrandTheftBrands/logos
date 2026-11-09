@@ -12,6 +12,8 @@ concurrency:
   cancel-in-progress: ${{ github.event.action != 'labeled' }}
 
 permissions:
+  # actions: starts the Auto-Merge countdown after a maintainer's approval
+  actions: write
   contents: write
   issues: write
   pull-requests: write

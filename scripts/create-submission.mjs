@@ -186,3 +186,19 @@ for (const b of batch) {
   await setLabels(api, b.issue.number, [], ['needs-changes']);
   await upsertComment(api, b.issue.number, `### Approved\n\nThanks @${b.issue.user.login}! It’s in pull request #${pr.number}, and goes live on the site as soon as that’s merged.`);
 }
+
+// Every submission here approved by a person (not Instant Approval): start the auto-merge countdown.
+// scripts/auto-merge.mjs re-checks all of this before merging.
+const byPerson = async (number) => {
+  const events = (await api(`/repos/{repo}/issues/${number}/events?per_page=100`)) ?? [];
+  return events.filter((e) => e.event === 'labeled' && e.label?.name === 'approved').pop()?.actor?.type === 'User';
+};
+let everyByPerson = !auto;
+for (const b of batch) if (everyByPerson && !(await byPerson(b.issue.number))) everyByPerson = false;
+if (everyByPerson) {
+  const sha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim();
+  await api('/repos/{repo}/actions/workflows/auto-merge.yml/dispatches', {
+    method: 'POST',
+    body: { ref: 'main', inputs: { pr: String(pr.number), sha } },
+  }).catch((e) => console.warn(`Couldn't start auto-merge: ${e.message}`));
+}

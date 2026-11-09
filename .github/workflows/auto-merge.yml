@@ -1,0 +1,50 @@
+name: Auto-Merge
+
+# Merges a submission pull request about 10 minutes after its latest approval, but only if every
+# submission in it was approved by a person (not Instant Approval) and nothing changed since.
+# Started by scripts/create-submission.mjs; all checks are in scripts/auto-merge.mjs.
+# Add the "hold" label to a pull request or submission to stop it.
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number
+        required: true
+      sha:
+        description: The approved head commit
+        required: true
+
+# A newer approval cancels this one and starts the 10 minutes again
+concurrency:
+  group: auto-merge
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: read
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait 10 minutes
+        run: sleep 600
+
+      # main's scripts, never the pull request's
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Check and merge
+        run: node scripts/auto-merge.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          SHA: ${{ inputs.sha }}
+          CF_DEPLOY_HOOK: ${{ secrets.CF_DEPLOY_HOOK }}

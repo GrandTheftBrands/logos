@@ -105,7 +105,7 @@ export async function validateIssue(issue, token) {
     if (sub.variant) {
       const slot = freeSlot(sub.brand, sub.variant, sub.variantLabel);
       if (slot.variant !== sub.variant) {
-        notes.push(`This brand already has a **${sub.variantLabel}**, so this one will be added as **${slot.variantLabel}**. To give it a clearer name, edit the issue and fill in **Logo Name**.`);
+        notes.push(`This brand already has a logo called **${sub.variantLabel}**, so this one will be added as **${slot.variantLabel}**. To give it a clearer name, edit the issue and fill in **Logo Name**.`);
       }
       sub.requestedVariant = sub.variant;
       sub.requestedLabel = sub.variantLabel;
